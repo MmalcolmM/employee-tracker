@@ -1,0 +1,21 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "dependencies": {
+    "fetch": "^1.1.0",
+    "inquirer": "^8.2.4",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.11.5"
+  }
+}
