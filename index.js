@@ -113,7 +113,7 @@ const initializeServer = async () => {
                     'Add department',
                     'Delete employee',
 
-                
+
                 ]
             }
         ]);
@@ -167,7 +167,7 @@ const initializeServer = async () => {
             );
         } else if (answers.action === "Delete employee") {
             pool.query(`SELECT id, first_name, last_name FROM employee`, async (err, res) => {
-                if (err){
+                if (err) {
                     console.error('Error querying employees:', err);
                     mainPrompt();
                 } else {
@@ -175,8 +175,8 @@ const initializeServer = async () => {
                         name: `${emp.first_name} ${emp.last_name}`,
                         value: emp.id
                     }));
-                    
-                    const { employeeID } =  await.inquirer.prompt([
+
+                    const { employeeID } = await inquirer.prompt([
                         {
                             type: 'list',
                             name: 'employeeID',
@@ -203,7 +203,7 @@ const initializeServer = async () => {
                     console.table(res.rows), mainPrompt();
                 }
             });
-        } else if (answers.action === "Add department")  {
+        } else if (answers.action === "Add department") {
             const departmentDetails = await inquirer.prompt([
                 {
                     type: 'input',
@@ -222,7 +222,7 @@ const initializeServer = async () => {
                         console.log('Created department'), mainPrompt();
                     }
                 }
-            ); 
+            );
         }
         else if (answers.action === "View all roles") {
             pool.query('SELECT * FROM role', (err, res) => {
@@ -256,7 +256,7 @@ const initializeServer = async () => {
 
             pool.query(
                 'INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)',
-                [title, salary, department_id, ],
+                [title, salary, department_id,],
                 (err, res) => {
                     if (err) {
                         console.error('Error adding role:', err);
@@ -265,9 +265,61 @@ const initializeServer = async () => {
                     }
                 });
         } else if (answers.action === "Update employee role") {
+            pool.query('SELECT id, first_name, last_name FROM employee', async (err, res) => {
+                if (err) {
+                    console.error('Error querying employees:', err);
+                    mainPrompt();
+                } else {
+                    const employees = res.rows.map(emp => ({
+                        name: `${emp.first_name} ${emp.last_name}`,
+                        value: emp.id
+                    }));
 
+                    const { employeeId } = await inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'employeeId',
+                            message: 'Select the employee to update:',
+                            choices: employees
+                        }
+                    ]);
+
+                    pool.query('SELECT id, title FROM role', async (err, res) => {
+                        if (err) {
+                            console.error('Error querying roles:', err);
+                            mainPrompt();
+                        } else {
+                            const roles = res.rows.map(role => ({
+                                name: role.title,
+                                value: role.id
+                            }));
+
+                            const { roleId } = await inquirer.prompt([
+                                {
+                                    type: 'list',
+                                    name: 'roleId',
+                                    message: 'Select the new role:',
+                                    choices: roles
+                                }
+                            ]);
+
+                            pool.query(
+                                'UPDATE employee SET role_id = $1 WHERE id = $2',
+                                [roleId, employeeId],
+                                (err, res) => {
+                                    if (err) {
+                                        console.error('Error updating employee role:', err);
+                                    } else {
+                                        console.log('Employee role updated successfully.');
+                                        mainPrompt();
+                                    }
+                                }
+                            );
+                        }
+                    });
+                }
+            });
         }
-        // Add handlers for update and delete actions here...
     };
 
     mainPrompt();
