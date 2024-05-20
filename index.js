@@ -123,7 +123,7 @@ const initializeServer = async () => {
                 if (err) {
                     console.error('Error querying employees:', err);
                 } else {
-                    console.table(res.rows);
+                    console.table(res.rows), mainPrompt();
                 }
             });
         } else if (answers.action === 'Add employee') {
@@ -161,24 +161,75 @@ const initializeServer = async () => {
                     if (err) {
                         console.error('Error adding employee:', err);
                     } else {
-                        console.log('Employee added successfully.');
+                        console.log('Employee added successfully.'), mainPrompt();
                     }
                 }
             );
+        } else if (answers.action === "Delete employee") {
+            pool.query(`SELECT id, first_name, last_name FROM employee`, async (err, res) => {
+                if (err){
+                    console.error('Error querying employees:', err);
+                    mainPrompt();
+                } else {
+                    const employees = res.rows.map(emp => ({
+                        name: `${emp.first_name} ${emp.last_name}`,
+                        value: emp.id
+                    }));
+                    
+                    const { employeeID } =  await.inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'employeeID',
+                            nessage: 'Select the employee to delete:',
+                            choices: employees
+                        }
+                    ]);
+
+                    pool.query('DELETE FROM employee WHERE id =$1', [employeeID], (err, res) => {
+                        if (err) {
+                            console.error('Error deleting employee:', err);
+                        } else {
+                            console.log('Employee deleted successfully.')
+                        }
+                        mainPrompt();
+                    });
+                }
+            });
         } else if (answers.action === "View all departments") {
             pool.query('SELECT * FROM department', (err, res) => {
                 if (err) {
                     console.error('Error querying departments:', err);
                 } else {
-                    console.table(res.rows);
+                    console.table(res.rows), mainPrompt();
                 }
             });
-        } else if (answers.action === "View all roles") {
+        } else if (answers.action === "Add department")  {
+            const departmentDetails = await inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'department_name',
+                    message: 'Enter the department name:'
+                }
+            ])
+            const { department_name } = departmentDetails;
+            console.log(department_name);
+            pool.query(
+                `INSERT INTO department (name) VALUES ('${department_name}');`,
+                (err, res) => {
+                    if (err) {
+                        console.error('Error adding department', err);
+                    } else {
+                        console.log('Created department'), mainPrompt();
+                    }
+                }
+            ); 
+        }
+        else if (answers.action === "View all roles") {
             pool.query('SELECT * FROM role', (err, res) => {
                 if (err) {
                     console.err('Error querying roles:', err);
                 } else {
-                    console.table(res.rows)
+                    console.table(res.rows), mainPrompt()
                 }
             })
         } else if (answers.action === "Add role") {
@@ -210,9 +261,11 @@ const initializeServer = async () => {
                     if (err) {
                         console.error('Error adding role:', err);
                     } else {
-                        console.log('role added successfully.');
+                        console.log('role added successfully.'), mainPrompt();
                     }
                 });
+        } else if (answers.action === "Update employee role") {
+
         }
         // Add handlers for update and delete actions here...
     };
