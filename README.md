@@ -21,7 +21,10 @@ For assistance cloning the repo follow: https://docs.github.com/articles/clonin
 
 ## Usage
 
-![screen shot](<Screenshot 2024-05-20 at 5.16.33 PM.png>) 
+Once installed, run the application using "node index.js".
+Here's a link to a video showing the process: https://drive.google.com/file/d/1t5Q6XvURI3xP_ezy7pzHIz0HF15mLXuP/view
+![screen shot of the terminal](<assets/images/Screenshot 2024-05-20 at 5.16.33 PM.png>)
+
 ## Credits
 
 My tutor Sachin was a big help and assistance from ChatGPT
