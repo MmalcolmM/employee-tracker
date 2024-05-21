@@ -21,14 +21,7 @@ For assistance cloning the repo follow: https://docs.github.com/articles/clonin
 
 ## Usage
 
-Provide instructions and examples for use. Include screenshots as needed.
-
-To add a screenshot, create an `assets/images` folder in your repository and upload your screenshot to it. Then, using the relative filepath, add it to your README using the following syntax:
-
-    ```md
-    ![alt text](assets/images/screenshot.png)
-    ```
-
+![screen shot](<Screenshot 2024-05-20 at 5.16.33 PM.png>) 
 ## Credits
 
 My tutor Sachin was a big help and assistance from ChatGPT
