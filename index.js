@@ -1,37 +1,38 @@
-require('dotenv').config();
-const inquirer = require('inquirer');
-const express = require('express');
-const { Pool } = require('pg');
+require('dotenv').config();  // Load environment variables from a .env file into process.env
+const inquirer = require('inquirer');  // Import inquirer for command-line prompts
+const express = require('express');  // Import express to create a server
+const { Pool } = require('pg');  // Import pg to interact with PostgreSQL
 
-const PORT = process.env.PORT || 3001;
-const app = express();
+const PORT = process.env.PORT || 3001;  // Set the port from environment variables or use 3001 as default
+const app = express();  // Create an instance of an express app
 
-// Express middleware
+// Express middleware to parse incoming requests with URL-encoded payloads and JSON payloads
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Database credentials
+// Database credentials from environment variables
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
 
 // Function to create the database and tables
 const createDatabaseAndTables = async () => {
+    // Create a new connection pool to the postgres database
     const pool = new Pool({
         user: dbUser,
         password: dbPassword,
         host: 'localhost',
-        database: 'postgres' // Connect to postgres database initially
+        database: 'postgres'  // Connect to the postgres database initially
     });
 
-    const client = await pool.connect();
+    const client = await pool.connect();  // Establish a connection to the database
 
     try {
-        // Drop and create the database
+        // Drop the existing employee_db database if it exists and create a new one
         await client.query(`DROP DATABASE IF EXISTS employee_db;`);
         await client.query(`CREATE DATABASE employee_db;`);
         console.log('Database created successfully.');
 
-        // Connect to the new employee_db database
+        // Connect to the newly created employee_db database
         const newPool = new Pool({
             user: dbUser,
             password: dbPassword,
@@ -39,9 +40,9 @@ const createDatabaseAndTables = async () => {
             database: 'employee_db'
         });
 
-        const newClient = await newPool.connect();
+        const newClient = await newPool.connect();  // Establish a connection to the new database
 
-        // Create tables
+        // SQL query to create the department, role, and employee tables
         const createTablesQuery = `
             CREATE TABLE department (
                 id SERIAL PRIMARY KEY,
@@ -73,20 +74,21 @@ const createDatabaseAndTables = async () => {
             );
         `;
 
-        await newClient.query(createTablesQuery);
+        await newClient.query(createTablesQuery);  // Execute the query to create the tables
         console.log('Tables created successfully.');
 
-        newClient.release();
+        newClient.release();  // Release the new client back to the pool
     } catch (err) {
+        // Log any errors that occur during the execution of the try block
         console.error('Error executing schema:', err.stack);
     } finally {
-        client.release();
+        client.release();  // Release the initial client back to the pool
     }
 };
 
-// Connect to the employee_db database and initialize the server
+// Function to initialize the server
 const initializeServer = async () => {
-    await createDatabaseAndTables();
+    await createDatabaseAndTables();  // Create the database and tables before starting the server
 
     const pool = new Pool({
         user: dbUser,
@@ -97,6 +99,7 @@ const initializeServer = async () => {
 
     console.log('Connected to the employee_db database.');
 
+    // Main prompt function to interact with the user
     const mainPrompt = async () => {
         const answers = await inquirer.prompt([
             {
@@ -112,8 +115,6 @@ const initializeServer = async () => {
                     'View all departments',
                     'Add department',
                     'Delete employee',
-
-
                 ]
             }
         ]);
@@ -123,7 +124,8 @@ const initializeServer = async () => {
                 if (err) {
                     console.error('Error querying employees:', err);
                 } else {
-                    console.table(res.rows), mainPrompt();
+                    console.table(res.rows);
+                    mainPrompt();  // Call mainPrompt again to continue the interaction
                 }
             });
         } else if (answers.action === 'Add employee') {
@@ -161,7 +163,8 @@ const initializeServer = async () => {
                     if (err) {
                         console.error('Error adding employee:', err);
                     } else {
-                        console.log('Employee added successfully.'), mainPrompt();
+                        console.log('Employee added successfully.');
+                        mainPrompt();  // Call mainPrompt again to continue the interaction
                     }
                 }
             );
@@ -180,18 +183,18 @@ const initializeServer = async () => {
                         {
                             type: 'list',
                             name: 'employeeID',
-                            nessage: 'Select the employee to delete:',
+                            message: 'Select the employee to delete:',
                             choices: employees
                         }
                     ]);
 
-                    pool.query('DELETE FROM employee WHERE id =$1', [employeeID], (err, res) => {
+                    pool.query('DELETE FROM employee WHERE id = $1', [employeeID], (err, res) => {
                         if (err) {
                             console.error('Error deleting employee:', err);
                         } else {
-                            console.log('Employee deleted successfully.')
+                            console.log('Employee deleted successfully.');
                         }
-                        mainPrompt();
+                        mainPrompt();  // Call mainPrompt again to continue the interaction
                     });
                 }
             });
@@ -200,7 +203,8 @@ const initializeServer = async () => {
                 if (err) {
                     console.error('Error querying departments:', err);
                 } else {
-                    console.table(res.rows), mainPrompt();
+                    console.table(res.rows);
+                    mainPrompt();  // Call mainPrompt again to continue the interaction
                 }
             });
         } else if (answers.action === "Add department") {
@@ -210,35 +214,37 @@ const initializeServer = async () => {
                     name: 'department_name',
                     message: 'Enter the department name:'
                 }
-            ])
+            ]);
+
             const { department_name } = departmentDetails;
             console.log(department_name);
+
             pool.query(
                 `INSERT INTO department (name) VALUES ('${department_name}');`,
                 (err, res) => {
                     if (err) {
                         console.error('Error adding department', err);
                     } else {
-                        console.log('Created department'), mainPrompt();
+                        console.log('Created department');
+                        mainPrompt();  // Call mainPrompt again to continue the interaction
                     }
                 }
             );
-        }
-        else if (answers.action === "View all roles") {
+        } else if (answers.action === "View all roles") {
             pool.query('SELECT * FROM role', (err, res) => {
                 if (err) {
-                    console.err('Error querying roles:', err);
+                    console.error('Error querying roles:', err);
                 } else {
-                    console.table(res.rows), mainPrompt()
+                    console.table(res.rows);
+                    mainPrompt();  // Call mainPrompt again to continue the interaction
                 }
-            })
+            });
         } else if (answers.action === "Add role") {
             const roleDetails = await inquirer.prompt([
                 {
                     type: 'input',
                     name: 'title',
-                    mesage: 'Enter the role title:'
-
+                    message: 'Enter the role title:'
                 },
                 {
                     type: 'input',
@@ -246,24 +252,26 @@ const initializeServer = async () => {
                     message: 'Enter the salary for the role:'
                 },
                 {
-                    type: "input",
+                    type: 'input',
                     name: 'department_id',
                     message: 'Enter the department ID:'
                 }
-            ])
+            ]);
+
             const { title, salary, department_id } = roleDetails;
-            const roleIdValue = department_id === '' ? null : department_id;
 
             pool.query(
                 'INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)',
-                [title, salary, department_id,],
+                [title, salary, department_id],
                 (err, res) => {
                     if (err) {
                         console.error('Error adding role:', err);
                     } else {
-                        console.log('role added successfully.'), mainPrompt();
+                        console.log('Role added successfully.');
+                        mainPrompt();  // Call mainPrompt again to continue the interaction
                     }
-                });
+                }
+            );
         } else if (answers.action === "Update employee role") {
             pool.query('SELECT id, first_name, last_name FROM employee', async (err, res) => {
                 if (err) {
@@ -311,7 +319,7 @@ const initializeServer = async () => {
                                         console.error('Error updating employee role:', err);
                                     } else {
                                         console.log('Employee role updated successfully.');
-                                        mainPrompt();
+                                        mainPrompt();  // Call mainPrompt again to continue the interaction
                                     }
                                 }
                             );
@@ -322,11 +330,12 @@ const initializeServer = async () => {
         }
     };
 
-    mainPrompt();
+    mainPrompt();  // Start the main prompt to interact with the user
 
     app.listen(PORT, () =>
         console.log(`App listening at http://localhost:${PORT}`)
     );
 };
 
+// Initialize the server and handle any errors that occur during initialization
 initializeServer().catch(err => console.error(err));

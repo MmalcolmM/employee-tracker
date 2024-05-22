@@ -131,3 +131,4 @@ dist
 
 /node_modules
 /.DS_STORE
+/index2.js
